@@ -8,8 +8,9 @@ running = False
 
 def update_outputs():
     if running:
-        # Speed 1: 10 ms period (100 Hz); speed 9: 2 ms period (500 Hz).
-        period_us = 10000 - ((speed - 1) * 1000)
+        # Faster range: speed 1 = 2 ms period (500 Hz),
+        # speed 9 = 200 us period (5 kHz).
+        period_us = 2000 - ((speed - 1) * 225)
         pins.analog_set_period(AnalogPin.P0, period_us)
         pins.analog_set_period(AnalogPin.P1, period_us)
         # 512 of 1023 is approximately 50% duty cycle.
