@@ -1,18 +1,35 @@
-# Microsoft MakeCode Python (not BBC MicroPython).
-# Connect the circuit to P0 and P1, with GND as the return.
-# These pins output a 0–3.3 V square wave.
+# Microsoft MakeCode Python (not BBC MicroPython)
+# P0 and P1 are used as the pulse output pins, with GND as the return.
+# This is a better approximation of the Lost Woods melody than the earlier version.
 
 speed = 5
 playing = False
-sequence_index = 0
+step = 0
 
-# More precise approximation of the "Lost Woods" melody.
-# Each entry is: (frequency_hz, duration_ms)
+# Approximate "Lost Woods" / Saria's Song style melody.
+# Frequencies chosen to sound closer to the original tune.
 melody = [
-    (392, 200), (392, 200), (494, 200), (494, 200), (523, 300), (494, 200), (440, 200), (392, 300),
-    (330, 200), (330, 200), (392, 200), (440, 200), (494, 300), (440, 200), (392, 200), (330, 300),
-    (392, 200), (440, 200), (494, 200), (523, 200), (494, 200), (440, 200), (392, 300), (440, 200),
-    (494, 200), (523, 200), (587, 300), (523, 200), (494, 200), (440, 200), (392, 400)
+    (392, 220), (440, 220), (494, 220), (440, 220),
+    (392, 220), (440, 220), (494, 220), (440, 220),
+    (392, 220), (440, 220), (494, 220), (440, 220),
+    (392, 220), (330, 220), (392, 220), (440, 220),
+    (494, 220), (440, 220), (392, 220), (330, 220),
+    (392, 220), (440, 220), (494, 220), (523, 220),
+    (494, 220), (440, 220), (392, 220), (330, 220),
+    (294, 220), (330, 220), (392, 220), (440, 220),
+    (494, 300), (440, 220), (392, 220), (330, 220),
+    (294, 300), (330, 220), (392, 220), (440, 220),
+    (494, 220), (523, 220), (494, 220), (440, 220),
+    (392, 220), (330, 220), (392, 220), (440, 220),
+    (494, 220), (523, 220), (587, 220), (523, 220),
+    (494, 220), (440, 220), (392, 220), (330, 220),
+    (392, 220), (440, 220), (494, 220), (523, 220),
+    (494, 220), (440, 220), (392, 220), (330, 220),
+    (294, 220), (330, 220), (392, 220), (440, 220),
+    (494, 300), (440, 220), (392, 220), (330, 220),
+    (294, 220), (330, 220), (392, 220), (440, 220),
+    (494, 220), (523, 220), (494, 220), (440, 220),
+    (392, 220), (330, 220), (294, 300)
 ]
 
 
@@ -25,7 +42,6 @@ def set_tone(freq):
     if freq <= 0:
         stop_outputs()
         return
-    # Convert note frequency to PWM period for a square wave tone.
     period_us = 1000000 // freq
     pins.analog_set_period(AnalogPin.P0, period_us)
     pins.analog_set_period(AnalogPin.P1, period_us)
@@ -33,27 +49,26 @@ def set_tone(freq):
     pins.analog_write_pin(AnalogPin.P1, 512)
 
 
-def play_melody_once():
-    global sequence_index, playing
+def play_one_step():
+    global step, playing
     if not playing:
         return
-    if sequence_index >= len(melody):
+    if step >= len(melody):
         playing = False
-        sequence_index = 0
+        step = 0
         stop_outputs()
         basic.clear_screen()
         return
 
-    freq, ms = melody[sequence_index]
-    # Speed sets the tempo scale: lower = slower, higher = faster.
-    tempo = 1.0 + ((speed - 5) * 0.09)
-    note_time = max(60, int(ms / tempo))
+    freq, ms = melody[step]
+    tempo_scale = 1.0 + ((speed - 5) * 0.09)
+    note_time = max(70, int(ms / tempo_scale))
 
     set_tone(freq)
     basic.pause(note_time)
     stop_outputs()
-    basic.pause(25)
-    sequence_index += 1
+    basic.pause(26)
+    step += 1
 
 
 def on_button_a_pressed():
@@ -71,10 +86,10 @@ def on_button_b_pressed():
 
 
 def on_button_ab_pressed():
-    global playing, sequence_index
+    global playing, step
     playing = not playing
     if playing:
-        sequence_index = 0
+        step = 0
         basic.show_number(speed)
     else:
         stop_outputs()
@@ -83,9 +98,9 @@ def on_button_ab_pressed():
 
 def on_forever():
     if playing:
-        play_melody_once()
+        play_one_step()
     else:
-        basic.pause(15)
+        basic.pause(10)
 
 
 stop_outputs()
