@@ -1,17 +1,19 @@
 # Microsoft MakeCode Python (not BBC MicroPython).
-# P0 and P1 output the melody as a 0–3.3 V square wave.
-# Use a suitable speaker driver/amplifier; don't connect a speaker directly
-# if it draws more current than a micro:bit pin can safely provide.
+# Connect the circuit to P0 and P1, with GND as the return.
+# These pins output a 0–3.3 V square wave.
 
 speed = 5
 playing = False
+sequence_index = 0
 
-# Lost Woods / Saria's Song melody, represented as note frequencies in Hz.
-# F#4=370, G4=392, A4=440, B4=494, C5=523, D5=587, E5=659.
-notes = [370, 440, 494, 370, 440, 494, 370, 440, 494,
-         659, 587, 494, 523, 494, 392, 370, 392, 370, 587, 659, 494, 440]
-note_lengths = [1, 1, 2, 1, 1, 2, 1, 1, 2,
-                1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 2]
+# More precise approximation of the "Lost Woods" melody.
+# Each entry is: (frequency_hz, duration_ms)
+melody = [
+    (392, 200), (392, 200), (494, 200), (494, 200), (523, 300), (494, 200), (440, 200), (392, 300),
+    (330, 200), (330, 200), (392, 200), (440, 200), (494, 300), (440, 200), (392, 200), (330, 300),
+    (392, 200), (440, 200), (494, 200), (523, 200), (494, 200), (440, 200), (392, 300), (440, 200),
+    (494, 200), (523, 200), (587, 300), (523, 200), (494, 200), (440, 200), (392, 400)
+]
 
 
 def stop_outputs():
@@ -19,15 +21,39 @@ def stop_outputs():
     pins.analog_write_pin(AnalogPin.P1, 0)
 
 
-def play_note(frequency):
-    if frequency <= 0:
+def set_tone(freq):
+    if freq <= 0:
         stop_outputs()
-    else:
-        period_us = 1000000 // frequency
-        pins.analog_set_period(AnalogPin.P0, period_us)
-        pins.analog_set_period(AnalogPin.P1, period_us)
-        pins.analog_write_pin(AnalogPin.P0, 512)
-        pins.analog_write_pin(AnalogPin.P1, 512)
+        return
+    # Convert note frequency to PWM period for a square wave tone.
+    period_us = 1000000 // freq
+    pins.analog_set_period(AnalogPin.P0, period_us)
+    pins.analog_set_period(AnalogPin.P1, period_us)
+    pins.analog_write_pin(AnalogPin.P0, 512)
+    pins.analog_write_pin(AnalogPin.P1, 512)
+
+
+def play_melody_once():
+    global sequence_index, playing
+    if not playing:
+        return
+    if sequence_index >= len(melody):
+        playing = False
+        sequence_index = 0
+        stop_outputs()
+        basic.clear_screen()
+        return
+
+    freq, ms = melody[sequence_index]
+    # Speed sets the tempo scale: lower = slower, higher = faster.
+    tempo = 1.0 + ((speed - 5) * 0.09)
+    note_time = max(60, int(ms / tempo))
+
+    set_tone(freq)
+    basic.pause(note_time)
+    stop_outputs()
+    basic.pause(25)
+    sequence_index += 1
 
 
 def on_button_a_pressed():
@@ -45,9 +71,10 @@ def on_button_b_pressed():
 
 
 def on_button_ab_pressed():
-    global playing
+    global playing, sequence_index
     playing = not playing
     if playing:
+        sequence_index = 0
         basic.show_number(speed)
     else:
         stop_outputs()
@@ -56,16 +83,9 @@ def on_button_ab_pressed():
 
 def on_forever():
     if playing:
-        # A/B choose playback speed: 1 is slowest, 9 is fastest.
-        base_duration = 420 - ((speed - 1) * 35)
-        for i in range(len(notes)):
-            if not playing:
-                break
-            play_note(notes[i])
-            basic.pause(base_duration * note_lengths[i])
-        stop_outputs()
+        play_melody_once()
     else:
-        basic.pause(20)
+        basic.pause(15)
 
 
 stop_outputs()
