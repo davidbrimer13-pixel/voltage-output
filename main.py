@@ -1,35 +1,28 @@
 # Microsoft MakeCode Python (not BBC MicroPython)
-# P0 and P1 are used as the pulse output pins, with GND as the return.
-# This is a better approximation of the Lost Woods melody than the earlier version.
+# Connect the circuit to P0 and P1, with GND as the return.
+# This is an original, upbeat Buddy Holly-style pop riff.
 
 speed = 5
 playing = False
 step = 0
 
-# Approximate "Lost Woods" / Saria's Song style melody.
-# Frequencies chosen to sound closer to the original tune.
-melody = [
-    (392, 220), (440, 220), (494, 220), (440, 220),
-    (392, 220), (440, 220), (494, 220), (440, 220),
-    (392, 220), (440, 220), (494, 220), (440, 220),
-    (392, 220), (330, 220), (392, 220), (440, 220),
-    (494, 220), (440, 220), (392, 220), (330, 220),
-    (392, 220), (440, 220), (494, 220), (523, 220),
-    (494, 220), (440, 220), (392, 220), (330, 220),
-    (294, 220), (330, 220), (392, 220), (440, 220),
-    (494, 300), (440, 220), (392, 220), (330, 220),
-    (294, 300), (330, 220), (392, 220), (440, 220),
-    (494, 220), (523, 220), (494, 220), (440, 220),
-    (392, 220), (330, 220), (392, 220), (440, 220),
-    (494, 220), (523, 220), (587, 220), (523, 220),
-    (494, 220), (440, 220), (392, 220), (330, 220),
-    (392, 220), (440, 220), (494, 220), (523, 220),
-    (494, 220), (440, 220), (392, 220), (330, 220),
-    (294, 220), (330, 220), (392, 220), (440, 220),
-    (494, 300), (440, 220), (392, 220), (330, 220),
-    (294, 220), (330, 220), (392, 220), (440, 220),
-    (494, 220), (523, 220), (494, 220), (440, 220),
-    (392, 220), (330, 220), (294, 300)
+# Original riff: catchy, simple, and bright.
+# Each note is (frequency_hz, duration_ms)
+riff = [
+    (440, 170), (440, 170), (494, 170), (554, 170),
+    (494, 170), (440, 170), (392, 170), (392, 170),
+    (440, 170), (440, 170), (494, 170), (554, 170),
+    (494, 170), (440, 170), (392, 170), (330, 250),
+
+    (392, 170), (392, 170), (440, 170), (494, 170),
+    (554, 170), (494, 170), (440, 170), (392, 170),
+    (440, 170), (440, 170), (494, 170), (554, 170),
+    (494, 170), (440, 170), (392, 170), (330, 250),
+
+    (440, 170), (494, 170), (554, 170), (494, 170),
+    (440, 170), (392, 170), (440, 170), (392, 170),
+    (330, 170), (392, 170), (440, 170), (494, 170),
+    (440, 170), (392, 170), (330, 170), (294, 300)
 ]
 
 
@@ -49,25 +42,25 @@ def set_tone(freq):
     pins.analog_write_pin(AnalogPin.P1, 512)
 
 
-def play_one_step():
+def play_one_note():
     global step, playing
     if not playing:
         return
-    if step >= len(melody):
+    if step >= len(riff):
         playing = False
         step = 0
         stop_outputs()
         basic.clear_screen()
         return
 
-    freq, ms = melody[step]
+    freq, ms = riff[step]
     tempo_scale = 1.0 + ((speed - 5) * 0.09)
-    note_time = max(70, int(ms / tempo_scale))
+    note_time = max(60, int(ms / tempo_scale))
 
     set_tone(freq)
     basic.pause(note_time)
     stop_outputs()
-    basic.pause(26)
+    basic.pause(20)
     step += 1
 
 
@@ -98,7 +91,7 @@ def on_button_ab_pressed():
 
 def on_forever():
     if playing:
-        play_one_step()
+        play_one_note()
     else:
         basic.pause(10)
 
